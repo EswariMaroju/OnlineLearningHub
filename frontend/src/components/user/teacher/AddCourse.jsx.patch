@@ -1,0 +1,7 @@
+<<<<<<<
+               formData.append(`S_title[]`, section.S_title);
+               formData.append(`S_description[]`, section.S_description);
+=======
+               formData.append(`S_title`, section.S_title);
+               formData.append(`S_description`, section.S_description);
+>>>>>>> 
