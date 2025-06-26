@@ -8,6 +8,8 @@ import NavBar from '../../common/NavBar';
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { Button } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 
 const CourseContent = () => {
    const user = useContext(UserContext)
@@ -98,19 +100,24 @@ const CourseContent = () => {
          <NavBar />
          <h1 className='my-3 text-center'>Welcome to the course: {courseTitle}</h1>
 
-         <div className='course-content'>
-            <div className="course-section">
+         <div className='course-content' style={{ display: 'flex', gap: 32 }}>
+            <div className="course-section" style={{ flex: 1 }}>
                <Accordion defaultActiveKey="0" flush>
                   {courseContent.map((section, index) => {
-                     // Extract sectionId from the section
                      const sectionId = index;
-
-                     // Check if the sectionId is not in completedModuleIds
-                     const isSectionCompleted = !completedModuleIds.includes(sectionId);
-
+                     const isSectionCompleted = completedModuleIds.includes(sectionId);
                      return (
                         <Accordion.Item key={index} eventKey={index.toString()}>
-                           <Accordion.Header>{section.S_title}</Accordion.Header>
+                           <Accordion.Header>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                 {isSectionCompleted ? (
+                                    <CheckCircleIcon style={{ color: '#22c55e' }} />
+                                 ) : (
+                                    <RadioButtonUncheckedIcon style={{ color: '#bdbdbd' }} />
+                                 )}
+                                 {section.S_title}
+                              </span>
+                           </Accordion.Header>
                            <Accordion.Body>
                               {section.S_description}
                               {section.S_content && (
@@ -118,14 +125,15 @@ const CourseContent = () => {
                                     <Button color='success' className='mx-2' variant="text" size="small" onClick={() => playVideo(`http://localhost:8000${section.S_content.path}`, index)}>
                                        Play Video
                                     </Button>
-                                    {isSectionCompleted && !completedSections.includes(index) && (
+                                    {!isSectionCompleted && !completedSections.includes(index) && (
                                        <Button
                                           variant='success'
                                           size='sm'
                                           onClick={() => completeModule(sectionId)}
                                           disabled={playingSectionIndex !== index}
+                                          style={{ marginLeft: 8 }}
                                        >
-                                          Completed
+                                          Mark as Completed
                                        </Button>
                                     )}
                                  </>
@@ -135,7 +143,9 @@ const CourseContent = () => {
                      );
                   })}
                   {completedModule.length === courseContent.length && (
-                     <Button className='my-2' onClick={() => setShowModal(true)}>Download Certificate</Button>
+                     <Button className='my-2' onClick={() => setShowModal(true)} variant="contained" color="primary" style={{ fontWeight: 600, fontSize: 16, borderRadius: 8 }}>
+                        Download Certificate
+                     </Button>
                   )}
                </Accordion>
             </div>
@@ -149,7 +159,6 @@ const CourseContent = () => {
                   />
                )}
             </div>
-
          </div>
          <Modal
             size="lg"
@@ -160,24 +169,73 @@ const CourseContent = () => {
          >
             <Modal.Header closeButton>
                <Modal.Title id="example-custom-modal-styling-title">
-                  Completion Certificate
+                  🎉 Completion Certificate
                </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-               Congratulations! You have completed all sections. Here is your certificate
-               <div id='certificate-download' className="certificate text-center">
-                  <h1>Certificate of Completion</h1>
-                  <div className="content">
-                     <p>This is to certify that</p>
-                     <h2>{user.userData.name}</h2>
-                     <p>has successfully completed the course</p>
-                     <h3>{courseTitle}</h3>
-                     <p>on</p>
-                     <p className="date">{new Date(certificate).toLocaleDateString()}</p>
+               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f8f9fb', borderRadius: 20 }}>
+                  <div style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 12px #0001', padding: 40, width: 600, maxWidth: '100%', position: 'relative', textAlign: 'center', fontFamily: 'serif' }}>
+                     {/* Top border waves (approximate with CSS) */}
+                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 30, background: 'linear-gradient(90deg, #1a284d 0%, #f8f9fb 100%)', borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
+                     <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, background: 'linear-gradient(270deg, #1a284d 0%, #f8f9fb 100%)', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 }} />
+                     <div style={{ position: 'relative', zIndex: 2, padding: '20px 0 0 0' }}>
+                        <div style={{ color: '#1a284d', fontWeight: 700, fontSize: 28, letterSpacing: 2, marginBottom: 8 }}>LEARN HUB</div>
+                        <div style={{ fontFamily: 'cursive', fontSize: 32, color: '#1a284d', fontWeight: 600, marginBottom: 0 }}>Certificate</div>
+                        <div style={{ color: '#444', fontSize: 16, letterSpacing: 1, marginBottom: 18 }}>OF COMPLETION</div>
+                        <div style={{ background: '#bfa046', color: '#fff', fontWeight: 600, borderRadius: 8, display: 'inline-block', padding: '6px 24px', fontSize: 16, marginBottom: 18 }}>PROUDLY PRESENTED TO</div>
+                        <div style={{ fontWeight: 700, fontSize: 32, letterSpacing: 2, margin: '12px 0' }}>{user.userData.name}</div>
+                        <div style={{ color: '#222', fontSize: 18, marginBottom: 8 }}>for successfully completing the course</div>
+                        <div style={{ fontWeight: 700, fontSize: 28, color: '#1a284d', marginBottom: 8 }}>{courseTitle}</div>
+                        <div style={{ color: '#222', fontSize: 16, marginBottom: 8 }}>on this day: <b>{new Date(certificate).toLocaleDateString()}</b></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32 }}>
+                           <div style={{ borderTop: '2px solid #1a284d', width: 180, textAlign: 'center', color: '#1a284d', fontWeight: 500, fontSize: 14, paddingTop: 4 }}>
+                              {courseContent[0]?.C_educator || ''}<br />Instructor Name
+                           </div>
+                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                              <div style={{ background: '#bfa046', color: '#fff', borderRadius: '50%', width: 70, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, border: '4px solid #1a284d', marginBottom: 4 }}>
+                                 Best<br />AWARD
+                              </div>
+                           </div>
+                           <div style={{ borderTop: '2px solid #1a284d', width: 180, textAlign: 'center', color: '#1a284d', fontWeight: 500, fontSize: 14, paddingTop: 4 }}>
+                              LEARN HUB
+                           </div>
+                        </div>
+                     </div>
                   </div>
                </div>
-               <Button onClick={() => downloadPdfDocument('certificate-download')} style={{ float: 'right', marginTop: 3 }}>Download Certificate</Button>
-
+               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+                  <Button onClick={() => downloadPdfDocument('certificate-download')} variant="contained" color="success" style={{ fontWeight: 600, fontSize: 16, borderRadius: 8 }}>
+                     Download Certificate
+                  </Button>
+               </div>
+               {/* Hidden printable/downloadable certificate for PDF */}
+               <div id='certificate-download' style={{ display: 'none', background: '#fff', borderRadius: 20, boxShadow: '0 2px 12px #0001', padding: 40, width: 600, maxWidth: '100%', position: 'relative', textAlign: 'center', fontFamily: 'serif' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 30, background: 'linear-gradient(90deg, #1a284d 0%, #f8f9fb 100%)', borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30, background: 'linear-gradient(270deg, #1a284d 0%, #f8f9fb 100%)', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 }} />
+                  <div style={{ position: 'relative', zIndex: 2, padding: '20px 0 0 0' }}>
+                     <div style={{ color: '#1a284d', fontWeight: 700, fontSize: 28, letterSpacing: 2, marginBottom: 8 }}>LEARN HUB</div>
+                     <div style={{ fontFamily: 'cursive', fontSize: 32, color: '#1a284d', fontWeight: 600, marginBottom: 0 }}>Certificate</div>
+                     <div style={{ color: '#444', fontSize: 16, letterSpacing: 1, marginBottom: 18 }}>OF COMPLETION</div>
+                     <div style={{ background: '#bfa046', color: '#fff', fontWeight: 600, borderRadius: 8, display: 'inline-block', padding: '6px 24px', fontSize: 16, marginBottom: 18 }}>PROUDLY PRESENTED TO</div>
+                     <div style={{ fontWeight: 700, fontSize: 32, letterSpacing: 2, margin: '12px 0' }}>{user.userData.name}</div>
+                     <div style={{ color: '#222', fontSize: 18, marginBottom: 8 }}>for successfully completing the course</div>
+                     <div style={{ fontWeight: 700, fontSize: 28, color: '#1a284d', marginBottom: 8 }}>{courseTitle}</div>
+                     <div style={{ color: '#222', fontSize: 16, marginBottom: 8 }}>on this day: <b>{new Date(certificate).toLocaleDateString()}</b></div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32 }}>
+                        <div style={{ borderTop: '2px solid #1a284d', width: 180, textAlign: 'center', color: '#1a284d', fontWeight: 500, fontSize: 14, paddingTop: 4 }}>
+                           {courseContent[0]?.C_educator || ''}<br />Instructor Name
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                           <div style={{ background: '#bfa046', color: '#fff', borderRadius: '50%', width: 70, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, border: '4px solid #1a284d', marginBottom: 4 }}>
+                              Best<br />AWARD
+                           </div>
+                        </div>
+                        <div style={{ borderTop: '2px solid #1a284d', width: 180, textAlign: 'center', color: '#1a284d', fontWeight: 500, fontSize: 14, paddingTop: 4 }}>
+                           LEARN HUB
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </Modal.Body>
          </Modal>
       </>

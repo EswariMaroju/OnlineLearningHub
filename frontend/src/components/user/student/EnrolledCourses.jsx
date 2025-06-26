@@ -61,27 +61,30 @@ const EnrolledCourses = () => {
             <TableBody>
                {
                   allEnrolledCourese?.length > 0 ? (
-                     allEnrolledCourese?.map((course) => (
-                        <StyledTableRow key={course._id}>
-                           <StyledTableCell component="th" scope="row">
-                              {course._id}
-                           </StyledTableCell>
-                           <StyledTableCell component="th" scope="row">
-                              {course.C_title}
-                           </StyledTableCell>
-                           <StyledTableCell component="th" scope="row">
-                              {course.C_educator}
-                           </StyledTableCell>
-                           <StyledTableCell component="th" scope="row">
-                              {course.C_categories}
-                           </StyledTableCell>
-                           <StyledTableCell component="th" scope="row">
-                              <Link to={`/courseSection/${course._id}/${course.C_title}`}><Button size='small' variant="contained" color="success">Go To</Button></Link>
-                           </StyledTableCell>
-                        </StyledTableRow>
-                     )))
-                     :
-                     (<p className='px-2'>yet to be enrolled courses</p>)
+                     allEnrolledCourese
+                        .filter(course => course && course._id)
+                        .map((course) => (
+                           <StyledTableRow key={course._id}>
+                              <StyledTableCell component="th" scope="row">
+                                 {course._id}
+                              </StyledTableCell>
+                              <StyledTableCell component="th" scope="row">
+                                 {course.C_title}
+                              </StyledTableCell>
+                              <StyledTableCell component="th" scope="row">
+                                 {course.C_educator}
+                              </StyledTableCell>
+                              <StyledTableCell component="th" scope="row">
+                                 {course.C_categories}
+                              </StyledTableCell>
+                              <StyledTableCell component="th" scope="row">
+                                 <Link to={`/courseSection/${course._id}/${course.C_title}`}><Button size='small' variant="contained" color="success">Go To</Button></Link>
+                              </StyledTableCell>
+                           </StyledTableRow>
+                        ))
+                  ) : (
+                     <p className='px-2'>yet to be enrolled courses</p>
+                  )
                }
             </TableBody>
          </Table>

@@ -34,6 +34,29 @@ const registerController = async (req, res) => {
 ////for the login
 const loginController = async (req, res) => {
   try {
+    // Hardcoded admin credentials
+    const adminEmail = "admin@gmail.com";
+    const adminPassword = "admin@123";
+
+    if (req.body.email === adminEmail && req.body.password === adminPassword) {
+      // Create a fake admin user object
+      const adminUser = {
+        _id: "adminid",
+        name: "Admin",
+        email: adminEmail,
+        type: "admin",
+      };
+      const token = jwt.sign({ id: adminUser._id }, process.env.JWT_KEY, {
+        expiresIn: "1d",
+      });
+      return res.status(200).send({
+        message: "Admin login successful",
+        success: true,
+        token,
+        userData: adminUser,
+      });
+    }
+
     const user = await userSchema.findOne({ email: req.body.email });
     if (!user) {
       return res
@@ -377,6 +400,64 @@ const sendAllCoursesUserController = async (req, res) => {
   }
 };
 
+const getStudentsWithCoursesController = async (req, res) => {
+  try {
+    // Find all users with type 'student'
+    const students = await userSchema.find({ type: 'student' }).select('name email');
+
+    // For each student, find their enrolled courses
+    const studentsWithCourses = await Promise.all(
+      students.map(async (student) => {
+        const enrolledCourses = await enrolledCourseSchema.find({ userId: student._id });
+        const courseIds = enrolledCourses.map((enrolled) => enrolled.courseId);
+        const courses = await courseSchema.find({ _id: { $in: courseIds } }).select('C_title');
+        return {
+          _id: student._id,
+          username: student.name,
+          email: student.email,
+          courses: courses.map(course => course.C_title),
+        };
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: studentsWithCourses,
+    });
+  } catch (error) {
+    console.error('Error fetching students with courses:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+const changePasswordController = async (req, res) => {
+  try {
+    const userId = req.user.id; // from authMiddleware
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await userSchema.findById(userId);
+    if (!user) {
+      return res.status(404).send({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).send({ success: false, message: "Old password is incorrect" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return res.status(200).send({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return res.status(500).send({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerController,
   loginController,
@@ -388,4 +469,6 @@ module.exports = {
   sendCourseContentController,
   completeSectionController,
   sendAllCoursesUserController,
+  getStudentsWithCoursesController,
+  changePasswordController
 };

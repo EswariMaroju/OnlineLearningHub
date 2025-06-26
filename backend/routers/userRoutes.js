@@ -13,6 +13,8 @@ const {
   sendCourseContentController,
   completeSectionController,
   sendAllCoursesUserController,
+  getStudentsWithCoursesController,
+  changePasswordController,
 } = require("../controllers/userControllers");
 
 const router = express.Router();
@@ -42,6 +44,8 @@ router.post(
   postCourseController
 );
 
+router.post("/change-password", authMiddleware, changePasswordController);
+
 router.get('/getallcourses', getAllCoursesController)
 
 router.get('/getallcoursesteacher', authMiddleware, getAllCoursesUserController)
@@ -55,5 +59,7 @@ router.get('/coursecontent/:courseid', authMiddleware, sendCourseContentControll
 router.post('/completemodule', authMiddleware, completeSectionController)
 
 router.get('/getallcoursesuser', authMiddleware, sendAllCoursesUserController)
+
+router.get('/studentsWithCourses', authMiddleware, getStudentsWithCoursesController);
 
 module.exports = router;

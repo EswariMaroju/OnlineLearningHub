@@ -35,7 +35,6 @@
 import React, { useContext, useState } from 'react';
 import NavBar from './NavBar';
 import UserHome from "./UserHome"
-import { Container } from 'react-bootstrap';
 import AddCourse from '../user/teacher/AddCourse';
 import StudentHome from '../user/student/StudentHome';
 import AdminHome from '../admin/AdminHome';
@@ -48,6 +47,8 @@ import AllCourses from '../admin/AllCourses';
 const Dashboard = () => {
    const user = useContext(UserContext)
    const [selectedComponent, setSelectedComponent] = useState('home');
+
+   const isStudent = user.userData?.type === "Student";
 
    const renderSelectedComponent = () => {
       switch (selectedComponent) {
@@ -68,10 +69,10 @@ const Dashboard = () => {
    };
    return (
       <>
-         <NavBar setSelectedComponent={setSelectedComponent} />
-         <Container className='my-3'>
+         {/* <NavBar setSelectedComponent={setSelectedComponent} /> */}
+         <div style={{ width: '100%', padding: isStudent ? '0' : '20px 40px', background: '#f8f9fb', minHeight: 'calc(100vh - 56px)' }}>
             {renderSelectedComponent()}
-         </Container>
+         </div>
       </>
    );
 };

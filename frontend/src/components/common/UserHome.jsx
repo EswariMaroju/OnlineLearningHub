@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Container } from 'react-bootstrap';
 import { UserContext } from '../../App';
 import TeacherHome from '../user/teacher/TeacherHome';
 import AdminHome from '../admin/AdminHome';
@@ -26,10 +25,12 @@ const UserHome = () => {
       }
    }
 
+   const isStudent = user.userData?.type === "Student";
+
    return (
-      <Container>
+      <div style={{ width: '100%', padding: isStudent ? '0' : '20px 40px', background: '#f8f9fb', minHeight: 'calc(100vh - 56px)' }}>
          {content}
-      </Container>
+      </div>
    );
 };
 

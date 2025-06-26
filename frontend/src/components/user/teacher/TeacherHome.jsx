@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Button, Card, Container } from 'react-bootstrap';
+import { Button, Card, Container, Row, Col } from 'react-bootstrap';
 import axiosInstance from '../../common/AxiosInstance';
 
 const TeacherHome = () => {
@@ -57,47 +57,31 @@ const TeacherHome = () => {
    }
 
    return (
-      <Container className='card-container'>
+      <Container className='teacher-home-container' style={{ maxWidth: '1200px' }}>
+         <h2 style={{ margin: '30px 0 20px 0', fontWeight: 600 }}>My Courses</h2>
          {allCourses?.length > 0 ? (
-            allCourses.map((course) => (
-               <Card key={course._id} className='card'>
-                  {/* <Card.Img variant='top' src='holder.js/100px180' /> */}
-                  <Card.Body>
-                     <Card.Title>{course.C_title}</Card.Title>
-                     <Card.Text>
-                        <p>
-                           <strong>Description: </strong>
-                           {course.showFullDescription
-                              ? course.C_description
-                              : course.C_description.slice(0, 10)}{' '}
-                           {course.C_description.length > 10 && (
-                              <span
-                                 className='read-more-link'
-                                 onClick={() => toggleDescription(course._id)}
-                              >
-                                 {course.showFullDescription ? 'Read Less' : 'Read More'}
-                              </span>
-                           )}
-                        </p>
-                        <p>
-                           <strong>Category: </strong>
-                           {course.C_categories}
-                        </p>
-                        <p>
-                           <strong>Sections: </strong> {course.sections.length}
-                        </p>
-                        <p style={{color: '#c3b9b9'}}>
-                           <strong>Enrolled students: </strong> {course.enrolled}
-                        </p>
-                     </Card.Text>
-                     <div style={{float: 'right'}} className='d-flex'>
-                        <Button variant='primary' onClick={() => deleteCourse(course._id)}>Delete</Button>
-                     </div>
-                  </Card.Body>
-               </Card>
-            ))
+            <Row xs={1} sm={2} md={3} lg={3} className="g-4">
+               {allCourses.map((course) => (
+                  <Col key={course._id}>
+                     <Card className='course-card' style={{ minHeight: '300px', borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                        <div style={{ background: '#e9ecef', height: '120px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           {/* Placeholder image/icon */}
+                           <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M3 9l9 6 9-6"></path></svg>
+                        </div>
+                        <Card.Body style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '180px' }}>
+                           <div>
+                              <Card.Title style={{ fontWeight: 600, fontSize: '1.1rem' }}>{course.C_title}</Card.Title>
+                              <div style={{ color: '#6c757d', fontSize: '0.95rem', margin: '8px 0' }}>{course.C_categories}</div>
+                              <div style={{ color: '#212529', fontWeight: 500, fontSize: '0.95rem' }}>{course.enrolled} enrolled</div>
+                           </div>
+                           <Button variant='outline-primary' style={{ marginTop: '16px', borderRadius: '8px' }}>Edit</Button>
+                        </Card.Body>
+                     </Card>
+                  </Col>
+               ))}
+            </Row>
          ) : (
-            'No courses found!!'
+            <div style={{ color: '#888', marginTop: '40px', textAlign: 'center' }}>No courses found!!</div>
          )}
       </Container>
    );
