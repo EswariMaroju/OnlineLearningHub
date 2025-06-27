@@ -74,20 +74,24 @@ Navigate into the backend directory, install dependencies, configure environment
 Bash
 
 `cd backend`
+
 `npm install`
+
 Create a `.env` file in the backend directory with the following content (replace placeholders with your actual values):
 
 ```PORT=8000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
-PORT: The port your backend server will run on (e.g., 8000).```
+PORT: The port your backend server will run on (e.g., 8000).
+```
 
 Once the .env file is set up, start the backend server:
 
 Bash
 
 ```npm start
-The backend server should now be running, typically on http://localhost:5173.```
+The backend server should now be running, typically on http://localhost:5173.
+```
 
 3. Frontend Setup
 Open a new terminal window, navigate into the frontend directory, install dependencies, and start the development server.
@@ -97,7 +101,8 @@ Bash
 ```cd ../frontend # Go back to the root and then into frontend
 npm install
 npm run dev
-The frontend development server should now be running, usually on http://localhost:5173 (Vite's default).```
+The frontend development server should now be running, usually on http://localhost:5173 (Vite's default).
+```
 
 **🚀 Usage Instructions**
 **Access the Frontend:** Open your web browser and navigate to the frontend development server URL (typically http://localhost:5000).
