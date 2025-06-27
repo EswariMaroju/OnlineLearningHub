@@ -105,7 +105,7 @@ The frontend development server should now be running, usually on http://localho
 ```
 
 **🚀 Usage Instructions**
-**Access the Frontend:** Open your web browser and navigate to the frontend development server URL (typically http://localhost:5000).
+**Access the Frontend:** Open your web browser and navigate to the frontend development server URL (typically http://localhost:5173).
 
 **Register:** Sign up as a new user. You can choose to register as a Teacher, Student, or Admin.
 
