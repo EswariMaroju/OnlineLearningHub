@@ -1,6 +1,4 @@
-Here's a comprehensive README file for your Learning Hub project, incorporating all the details you provided. I've structured it for clarity and ease of use, making it professional and engaging.
-
-Learning Hub
+#Learning Hub
 An online learning platform designed to facilitate course creation, enrollment, and content delivery for students and teachers. Learning Hub supports role-based access with features tailored for teachers, students, and administrators, providing a seamless educational experience.
 
 🚀 Key Features
