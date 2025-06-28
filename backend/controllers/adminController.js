@@ -77,9 +77,57 @@ const deleteUserController = async (req, res) => {
   }
 };
 
+// Get course status statistics
+const getCourseStatusStatsController = async (req, res) => {
+  try {
+    const courses = await courseSchema.find();
+    const stats = { published: 0, pending: 0, draft: 0 };
+    courses.forEach(course => {
+      if (course.status === 'published') stats.published++;
+      else if (course.status === 'pending') stats.pending++;
+      else if (course.status === 'draft') stats.draft++;
+    });
+    res.status(200).send({ success: true, data: stats });
+  } catch (error) {
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
+// Get enrollment statistics per day of week for the last 7 days
+const getEnrollmentStatsController = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const enrollments = await enrolledCourseSchema.find({
+      createdAt: { $gte: sevenDaysAgo }
+    });
+    // Days: 0=Sun, 1=Mon, ..., 6=Sat
+    const stats = [0, 0, 0, 0, 0, 0, 0];
+    enrollments.forEach(enroll => {
+      const day = new Date(enroll.createdAt).getDay();
+      stats[day]++;
+    });
+    res.status(200).send({ success: true, data: stats });
+  } catch (error) {
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
+const getAllEnrollmentsController = async (req, res) => {
+  try {
+    const enrollments = await enrolledCourseSchema.find();
+    res.status(200).send({ success: true, data: enrollments });
+  } catch (error) {
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getAllUsersController,
   getAllCoursesController,
   deleteCourseController,
   deleteUserController,
+  getCourseStatusStatsController,
+  getEnrollmentStatsController,
+  getAllEnrollmentsController,
 };

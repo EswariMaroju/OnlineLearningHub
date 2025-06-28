@@ -190,7 +190,9 @@ const postCourseController = async (req, res) => {
 ///all courses for the teacher
 const getAllCoursesUserController = async (req, res) => {
   try {
-    const allCourses = await courseSchema.find({ userId: req.body.userId });
+    console.log('getAllCoursesUserController: req.user.id =', req.user?.id);
+    const allCourses = await courseSchema.find({ userId: req.user.id });
+    console.log('getAllCoursesUserController: found courses =', allCourses);
     if (!allCourses) {
       res.send({
         success: false,
@@ -204,10 +206,10 @@ const getAllCoursesUserController = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error in fetching courses:", error);
-    res
-      .status(500)
-      .send({ success: false, message: "Failed to fetch courses" });
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

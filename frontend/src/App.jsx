@@ -39,21 +39,21 @@ function App() {
             <Route path="/" element={<Home />} />
             {userLoggedIn && userData ? (
               <>
-                {userData.type === 'Teacher' && (
+                {userData.type?.toLowerCase() === 'teacher' && (
                   <Route path="/teacher/*" element={<TeacherDashboard />} />
                 )}
-                {userData.type === 'Admin' && (
+                {userData.type?.toLowerCase() === 'admin' && (
                   <Route path="/admin" element={<AdminHome />} />
                 )}
-                {(userData.type === 'Student') && (
+                {(userData.type?.toLowerCase() === 'student') && (
                   <Route path="/dashboard" element={<Dashboard />} />
                 )}
                 <Route path="/courseSection/:courseId/:courseTitle" element={<CourseContent />} />
                 <Route path="*" element={
                   <Navigate to={
-                    userData.type === 'Teacher'
+                    userData.type?.toLowerCase() === 'teacher'
                       ? '/teacher'
-                      : userData.type === 'Admin'
+                      : userData.type?.toLowerCase() === 'admin'
                         ? '/admin'
                         : '/dashboard'
                   } replace />

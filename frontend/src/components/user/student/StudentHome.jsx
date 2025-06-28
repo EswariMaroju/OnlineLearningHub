@@ -11,14 +11,15 @@ import SchoolIcon from '@mui/icons-material/School';
 import CodeIcon from '@mui/icons-material/Code';
 import BrushIcon from '@mui/icons-material/Brush';
 import studentBg from "../../../assets/Images/student-login-bg.jpg";
+import { FaTachometerAlt, FaBook, FaCog, FaEnvelope, FaSignOutAlt } from 'react-icons/fa';
 // import Settings and ContactUs when ready
 
 const menuItems = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'mycourses', label: 'My Courses' },
-  { key: 'settings', label: 'Settings' },
-  { key: 'contactus', label: 'Contact Us' },
-  { key: 'logout', label: 'Logout' },
+  { key: 'dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
+  { key: 'mycourses', label: 'My Courses', icon: <FaBook /> },
+  { key: 'settings', label: 'Settings', icon: <FaCog /> },
+  { key: 'contactus', label: 'Contact Us', icon: <FaEnvelope /> },
+  { key: 'logout', label: 'Logout', icon: <FaSignOutAlt /> },
 ];
 
 const StudentHome = () => {
@@ -218,9 +219,13 @@ const StudentHome = () => {
                     color: activeMenu === item.key ? '#3730a3' : '#222',
                     transition: 'background 0.2s',
                     userSelect: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
                   }}
                 >
-                  {item.label}
+                  <span style={{ fontSize: 20 }}>{item.icon}</span>
+                  <span>{item.label}</span>
                 </li>
               ))}
             </ul>

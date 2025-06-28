@@ -19,7 +19,7 @@ const Settings = () => {
 
     try {
       const res = await axiosInstance.post('/api/user/change-password', {
-        currentPassword,
+        oldPassword: currentPassword,
         newPassword,
       }, {
         headers: {

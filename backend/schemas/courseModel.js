@@ -30,6 +30,11 @@ const courseModel = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    status: {
+      type: String,
+      enum: ['published', 'pending', 'draft'],
+      default: 'published',
+    },
   },
   {
     timestamps: true,

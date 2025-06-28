@@ -33,27 +33,15 @@ const Students = () => {
         <Table striped bordered hover responsive>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Courses Enrolled</th>
+              <th>Username</th>
+              <th>Registered Courses</th>
             </tr>
           </thead>
           <tbody>
             {students.map((student) => (
               <tr key={student._id}>
-                <td>{student.username}</td>
-                <td>{student.email}</td>
-                <td>
-                  {student.courses && student.courses.length > 0 ? (
-                    <ul>
-                      {student.courses.map((course, index) => (
-                        <li key={index}>{course}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    'N/A'
-                  )}
-                </td>
+                <td>{student.name || student.username}</td>
+                <td>{student.courses && student.courses.length > 0 ? student.courses.join(', ') : 'None'}</td>
               </tr>
             ))}
           </tbody>

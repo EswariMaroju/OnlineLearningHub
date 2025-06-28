@@ -8,15 +8,15 @@ import { UserContext } from '../../../App';
 import { useNavigate } from 'react-router-dom';
 import AllCourses from '../../common/AllCourses';
 import Modal from 'react-bootstrap/Modal';
+import { FaTachometerAlt, FaBook, FaUserGraduate, FaCog, FaEnvelope, FaSignOutAlt } from 'react-icons/fa';
 
 const TeacherDashboard = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const { userData, setUserLoggedIn } = useContext(UserContext);
   const navigate = useNavigate();
 
-  // New state for profile dropdown and change password modal
+  // New state for profile dropdown
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   // New: Track if AllCourses should be shown in main area
   const [showAllCourses, setShowAllCourses] = useState(false);
@@ -32,12 +32,12 @@ const TeacherDashboard = () => {
   };
 
   const menuItems = [
-    { key: 'dashboard', label: 'Dashboard' },
-    { key: 'addcourses', label: 'Add Courses' },
-    { key: 'students', label: 'Students' },
-    { key: 'settings', label: 'Settings' },
-    { key: 'contactus', label: 'Contact Us' },
-    { key: 'logout', label: 'Logout' },
+    { key: 'dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
+    { key: 'addcourses', label: 'Add Courses', icon: <FaBook /> },
+    { key: 'students', label: 'Students', icon: <FaUserGraduate /> },
+    { key: 'settings', label: 'Settings', icon: <FaCog /> },
+    { key: 'contactus', label: 'Contact Us', icon: <FaEnvelope /> },
+    { key: 'logout', label: 'Logout', icon: <FaSignOutAlt /> },
   ];
 
   return (
@@ -90,7 +90,7 @@ const TeacherDashboard = () => {
                     alignItems: 'center',
                     gap: 8
                   }}
-                  onClick={() => { setShowChangePasswordModal(true); setShowProfileDropdown(false); }}
+                  onClick={() => { setActiveMenu('settings'); setShowAllCourses(false); setShowProfileDropdown(false); }}
                 >
                   <span role="img" aria-label="password">🔒</span> Change Password
                 </div>
@@ -133,7 +133,8 @@ const TeacherDashboard = () => {
                   if (item.key === 'logout') {
                     handleLogout();
                   } else if (item.key === 'settings') {
-                    setShowChangePasswordModal(true);
+                    setActiveMenu('settings');
+                    setShowAllCourses(false);
                   } else {
                     setActiveMenu(item.key);
                     setShowAllCourses(false);
@@ -149,9 +150,13 @@ const TeacherDashboard = () => {
                   color: activeMenu === item.key ? '#3730a3' : '#222',
                   transition: 'background 0.2s',
                   userSelect: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
                 }}
               >
-                {item.label}
+                <span style={{ fontSize: 20 }}>{item.icon}</span>
+                <span>{item.label}</span>
               </li>
             ))}
           </ul>
@@ -171,15 +176,6 @@ const TeacherDashboard = () => {
           )}
         </main>
       </div>
-      {/* Change Password Modal */}
-      <Modal show={showChangePasswordModal} onHide={() => setShowChangePasswordModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Change Password</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Settings />
-        </Modal.Body>
-      </Modal>
     </div>
   );
 };
