@@ -1,0 +1,6 @@
+node_modules/
+check-users.js
+package-lock.json
+package.json
+test-auth.js
+test-course-update.js
