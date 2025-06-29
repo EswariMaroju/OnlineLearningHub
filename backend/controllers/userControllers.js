@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const fs = require('fs');
+const path = require('path');
 
 const userSchema = require("../schemas/userModel");
 const courseSchema = require("../schemas/courseModel");
@@ -126,6 +128,15 @@ const postCourseController = async (req, res) => {
       S_description,
     } = req.body;
 
+    // Validate required fields
+    if (!userId || !C_educator || !C_title || !C_categories || !C_description) {
+      console.log('Missing required fields:', { userId, C_educator, C_title, C_categories, C_description });
+      return res.status(400).send({ 
+        success: false, 
+        message: "Missing required fields: userId, C_educator, C_title, C_categories, C_description" 
+      });
+    }
+
     // Normalize S_title and S_description to arrays if they are strings
     if (S_title && !Array.isArray(S_title)) {
       S_title = [S_title];
@@ -134,36 +145,41 @@ const postCourseController = async (req, res) => {
       S_description = [S_description];
     }
 
-    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-      return res.status(400).send({ success: false, message: "No files uploaded" });
+    console.log('Normalized section data:', { S_title, S_description });
+
+    // Group files by section index (match frontend field names)
+    const filesBySection = {};
+    if (req.files && Array.isArray(req.files)) {
+      req.files.forEach(file => {
+        // Expect fieldname like new_S_content_0[]
+        const match = file.fieldname.match(/new_S_content_(\d+)\[\]/);
+        if (match) {
+          const idx = match[1];
+          if (!filesBySection[idx]) filesBySection[idx] = [];
+          filesBySection[idx].push({ filename: file.filename, path: `/uploads/${file.filename}` });
+        }
+      });
     }
 
-    if (!S_title || S_title.length === 0) {
-      return res.status(400).send({ success: false, message: "Section titles are required" });
-    }
+    console.log('Files by section:', filesBySection);
 
-    if (!S_description || S_description.length === 0) {
-      return res.status(400).send({ success: false, message: "Section descriptions are required" });
-    }
-
-    const S_content = req.files.map((file) => file.filename); // Assuming you want to store the filenames in S_content
-    // Create an array of sections
     const sections = [];
     for (let i = 0; i < S_title.length; i++) {
       sections.push({
         S_title: S_title[i],
-        S_content: {
-          filename: S_content[i],
-          path: `/uploads/${S_content[i]}`,
-        },
         S_description: S_description[i],
+        S_content: filesBySection[i] || [],
       });
     }
+
+    console.log('Created sections:', sections);
+
     if (C_price == 0) {
       price = "free";
     } else {
       price = C_price;
     }
+
     // Create an instance of the course schema
     const course = new courseSchema({
       userId,
@@ -174,13 +190,28 @@ const postCourseController = async (req, res) => {
       C_description,
       sections,
     });
+
+    console.log('Course object to save:', course);
+
     // Save the course instance to the database
     await course.save();
+    console.log('Course saved successfully with ID:', course._id);
+    
     res
       .status(201)
       .send({ success: true, message: "Course created successfully" });
   } catch (error) {
     console.error("Error creating course:", error.stack || error);
+    
+    // Provide more specific error messages based on error type
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).send({ 
+        success: false, 
+        message: "Validation error: " + validationErrors.join(', ') 
+      });
+    }
+    
     res
       .status(500)
       .send({ success: false, message: `Failed to create course: ${error.message}` });
@@ -215,24 +246,58 @@ const getAllCoursesUserController = async (req, res) => {
 
 ///delete courses by the teacher
 const deleteCourseController = async (req, res) => {
-  const { courseid } = req.params; // Use the correct parameter name
+  const { courseid } = req.params;
   try {
-    // Attempt to delete the course by its ID
-    const course = await courseSchema.findByIdAndDelete({ _id: courseid });
-
-    // Check if the course was found and deleted successfully
-    if (course) {
-      res
-        .status(200)
-        .send({ success: true, message: "Course deleted successfully" });
-    } else {
-      res.status(404).send({ success: false, message: "Course not found" });
+    // First, find the course to get file information
+    const course = await courseSchema.findById(courseid);
+    
+    if (!course) {
+      return res.status(404).send({ success: false, message: "Course not found" });
     }
+
+    // Delete all enrollments for this course
+    await enrolledCourseSchema.deleteMany({ courseId: courseid });
+    console.log(`Deleted enrollments for course: ${courseid}`);
+
+    // Delete all course payments for this course
+    await coursePaymentSchema.deleteMany({ courseId: courseid });
+    console.log(`Deleted payments for course: ${courseid}`);
+
+    // Delete uploaded files from the server
+    if (course.sections && Array.isArray(course.sections)) {
+      course.sections.forEach(section => {
+        if (section.S_content && Array.isArray(section.S_content)) {
+          section.S_content.forEach(file => {
+            if (file.filename) {
+              const filePath = path.join(__dirname, '../uploads', file.filename);
+              try {
+                if (fs.existsSync(filePath)) {
+                  fs.unlinkSync(filePath);
+                  console.log(`Deleted file: ${file.filename}`);
+                }
+              } catch (fileError) {
+                console.error(`Error deleting file ${file.filename}:`, fileError);
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // Finally, delete the course itself
+    await courseSchema.findByIdAndDelete(courseid);
+    console.log(`Deleted course: ${courseid}`);
+
+    res.status(200).send({ 
+      success: true, 
+      message: "Course and all related data deleted successfully" 
+    });
   } catch (error) {
     console.error("Error in deleting course:", error);
-    res
-      .status(500)
-      .send({ success: false, message: "Failed to delete course" });
+    res.status(500).send({ 
+      success: false, 
+      message: "Failed to delete course" 
+    });
   }
 };
 
@@ -311,8 +376,10 @@ const sendCourseContentController = async (req, res) => {
         message: "No such course found",
       });
 
+    // Use authenticated user ID from token
+    const userId = req.user.id;
     const user = await enrolledCourseSchema.findOne({
-      userId: req.body.userId,
+      userId: userId,
       courseId: courseid, // Add the condition to match the courseId
     });
 
@@ -325,6 +392,14 @@ const sendCourseContentController = async (req, res) => {
       return res.status(200).send({
         success: true,
         courseContent: course.sections,
+        courseInfo: {
+          C_title: course.C_title,
+          C_description: course.C_description,
+          C_educator: course.C_educator,
+          C_categories: course.C_categories,
+          C_price: course.C_price,
+          status: course.status,
+        },
         completeModule: user.progress,
         certficateData: user,
       });
@@ -376,8 +451,9 @@ const completeSectionController = async (req, res) => {
 
 ////////////get all courses for paricular user
 const sendAllCoursesUserController = async (req, res) => {
-  const { userId } = req.body;
   try {
+    // Use authenticated user ID from token
+    const userId = req.user.id;
     // First, fetch the enrolled courses for the user
     const enrolledCourses = await enrolledCourseSchema.find({ userId });
 
@@ -460,6 +536,148 @@ const changePasswordController = async (req, res) => {
   }
 };
 
+const editCourseController = async (req, res) => {
+  try {
+    console.log('Edit course request received:', {
+      body: req.body,
+      files: req.files ? req.files.length : 0,
+      courseId: req.body.courseId
+    });
+    
+    const { courseId, C_title, C_categories, S_title, S_description } = req.body;
+    
+    // Validate required fields
+    if (!courseId) {
+      console.log('Missing courseId in request');
+      return res.status(400).send({ success: false, message: "Course ID is required" });
+    }
+    if (!C_title || !C_categories) {
+      console.log('Missing required fields:', { C_title, C_categories });
+      return res.status(400).send({ success: false, message: "Course title and category are required" });
+    }
+    
+    // Parse existing files for each section
+    let existingFiles = [];
+    Object.keys(req.body).forEach(key => {
+      if (key.startsWith('existing_S_content_')) {
+        const match = key.match(/existing_S_content_(\d+)\[\]/);
+        if (!match) return; // skip keys that don't match the pattern
+        const idx = match[1];
+        if (!existingFiles[idx]) existingFiles[idx] = [];
+        const val = req.body[key];
+        if (Array.isArray(val)) {
+          val.forEach(v => {
+            try {
+              existingFiles[idx].push(JSON.parse(v));
+            } catch (parseError) {
+              console.error('Error parsing existing file data:', parseError);
+            }
+          });
+        } else {
+          try {
+            existingFiles[idx].push(JSON.parse(val));
+          } catch (parseError) {
+            console.error('Error parsing existing file data:', parseError);
+          }
+        }
+      }
+    });
+    
+    console.log('Parsed existing files:', existingFiles);
+    
+    // Group new files by section index
+    const newFilesBySection = {};
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        // Expect fieldname like new_S_content_0[]
+        const match = file.fieldname.match(/new_S_content_(\d+)\[\]/);
+        if (match) {
+          const idx = match[1];
+          if (!newFilesBySection[idx]) newFilesBySection[idx] = [];
+          newFilesBySection[idx].push({
+            filename: file.filename,
+            path: `/uploads/${file.filename}`,
+          });
+        }
+      });
+    }
+    
+    console.log('New files by section:', newFilesBySection);
+    
+    // Find the course
+    const course = await courseSchema.findById(courseId);
+    if (!course) {
+      console.log('Course not found with ID:', courseId);
+      return res.status(404).send({ success: false, message: "Course not found" });
+    }
+    
+    console.log('Found course:', course.C_title);
+    
+    // Update course fields
+    course.C_title = C_title;
+    course.C_categories = C_categories;
+    
+    // Update sections
+    course.sections = course.sections.map((section, idx) => ({
+      ...section.toObject(),
+      S_title: Array.isArray(S_title) ? S_title[idx] : S_title,
+      S_description: Array.isArray(S_description) ? S_description[idx] : S_description,
+      S_content: (existingFiles[idx] || []).concat(newFilesBySection[idx] || []),
+    }));
+    
+    console.log('Updated sections:', course.sections);
+    
+    await course.save();
+    console.log('Course saved successfully');
+    res.send({ success: true, message: "Course updated successfully" });
+  } catch (error) {
+    console.error('Error in editCourseController:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Provide more specific error messages based on error type
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.log('Validation errors:', validationErrors);
+      return res.status(400).send({ 
+        success: false, 
+        message: "Validation error: " + validationErrors.join(', ') 
+      });
+    }
+    
+    if (error.name === 'CastError') {
+      console.log('Cast error for field:', error.path);
+      return res.status(400).send({ 
+        success: false, 
+        message: "Invalid course ID format" 
+      });
+    }
+    
+    res.status(500).send({ 
+      success: false, 
+      message: "Failed to update course: " + error.message 
+    });
+  }
+};
+
+const debugCourseUpdateController = async (req, res) => {
+  try {
+    console.log('Debug endpoint called');
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+    console.log('Request headers:', req.headers);
+    
+    res.status(200).send({ 
+      success: true, 
+      message: "Debug endpoint working",
+      body: req.body,
+      filesCount: req.files ? req.files.length : 0
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).send({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   registerController,
   loginController,
@@ -472,5 +690,7 @@ module.exports = {
   completeSectionController,
   sendAllCoursesUserController,
   getStudentsWithCoursesController,
-  changePasswordController
+  changePasswordController,
+  editCourseController,
+  debugCourseUpdateController
 };
