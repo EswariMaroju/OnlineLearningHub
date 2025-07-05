@@ -73,9 +73,10 @@ Navigate into the backend directory, install dependencies, configure environment
 
 Bash
 
-`cd backend`
-
-`npm install`
+```cd backend
+npm install
+npm start
+```
 
 Create a `.env` file in the backend directory with the following content (replace placeholders with your actual values):
 
